@@ -30,6 +30,7 @@ build-backend = "hatchling.build"
 dev = [
     "bump-my-version>=0.29.0",
     "ipykernel>=6.29.5",
+    "ipywidgets>=8.1.5",
     "pre-commit-uv",
 ]
 docs = [

@@ -17,6 +17,7 @@ from procex.imgio import write_jpeg
 
 _app = typer.Typer(
     no_args_is_help=True,
+    add_completion=False,
 )
 
 
@@ -87,6 +88,13 @@ def process_images(  # noqa: PLR0913
             help="Lower and upper values to clip the image intensity.",
         ),
     ] = None,
+    format: Annotated[  # noqa: A002
+        str | None,
+        typer.Option(
+            ...,
+            help="Output image format. Only used when output is a directory.",
+        ),
+    ] = None,
     *,
     histeq: Annotated[
         bool,
@@ -112,13 +120,6 @@ def process_images(  # noqa: PLR0913
             help="Whether to process images in parallel.",
         ),
     ] = False,
-    format: Annotated[  # noqa: A002
-        str,
-        typer.Option(
-            ...,
-            help="Output image format. Only used when output is a directory.",
-        ),
-    ],
 ) -> None:
     """Preprocess a medical image."""
     input_paths = _get_input_paths(input)

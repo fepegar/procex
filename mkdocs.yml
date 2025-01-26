@@ -3,23 +3,30 @@ site_name: Procex documentation
 theme:
   name: material
   palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: teal
       toggle:
-        icon: material/weather-night
+        icon: material/brightness-7
         name: Switch to dark mode
 
     # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: teal
       toggle:
-        icon: material/weather-sunny
-        name: Switch to light mode
+        icon: material/brightness-4
+        name: Switch to system preference
 
   features:
+    - content.code.copy
+    - content.tabs.link
+    - navigation.footer
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
@@ -35,6 +42,11 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:  # https://squidfunk.github.io/mkdocs-material/reference/content-tabs/#configuration
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
 
 plugins:
   - search
@@ -56,6 +68,8 @@ plugins:
 
 nav:
   - index.md
+  - getting_started.md
+  - getting_help.md
   - API reference: reference/
 
 watch:
