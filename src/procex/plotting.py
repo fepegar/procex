@@ -1,8 +1,11 @@
+"""Functions to plot images and histograms."""
+
 import matplotlib.pyplot as plt
-import SimpleITK as sitk  # noqa: N813
+import SimpleITK as sitk
+from matplotlib.axes import Axes
 
 
-def plot_image(image: sitk.Image, ax: plt.Axes = None) -> None:
+def plot_image(image: sitk.Image, ax: Axes | None = None) -> None:
     if ax is None:
         _, ax = plt.subplots()
     array = sitk.GetArrayViewFromImage(image)
@@ -11,7 +14,7 @@ def plot_image(image: sitk.Image, ax: plt.Axes = None) -> None:
 
 def plot_histogram(
     image: sitk.Image,
-    ax: plt.Axes = None,
+    ax: Axes | None = None,
     *,
     log: bool = True,
 ) -> None:

@@ -1,0 +1,45 @@
+name: Docs
+
+on:
+  push:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v3
+
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+        if: github.ref == 'refs/heads/main'
+
+      - uses: actions/cache@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+
+      - name: Build and deploy to smokeshow
+        if: github.ref != 'refs/heads/main'
+        run: |
+          uv run --group docs -- mkdocs build
+          uvx smokeshow upload site
+
+      - name: Build and deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        run: uv run --group docs -- mkdocs gh-deploy --force

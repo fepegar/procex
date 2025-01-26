@@ -1,34 +1,76 @@
 [project]
 name = "procex"
 version = "0.1.0"
-description = "Add your description here"
+description = "Tool to preprocess medical images"
 readme = "README.md"
 authors = [
-    { name = "Fernando Pérez-García", email = "fperezgarcia@microsoft.com" }
+    { name = "Fernando Pérez-García", email = "fepegar@gmail.com" }
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
-    "matplotlib",
-    "numpy",
-    "pillow",
-    "scikit-learn",
+    "numpy>=1",
+    "pillow>=8",
+    "scikit-learn>=1",
     "simpleitk>=2",
-    "typer",
+    "typer>=0.2",
 ]
+
+[project.optional-dependencies]
+plot = [
+    "matplotlib>=3",
+]
+
+[project.scripts]
+procex = "procex.main:_app"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-dev-dependencies = [
-    "ipykernel",
-    "pyright",
-    "ruff",
+[dependency-groups]
+dev = [
+    "bump-my-version>=0.29.0",
+    "ipykernel>=6.29.5",
+    "pre-commit-uv",
 ]
+docs = [
+    "mkdocs-gen-files",
+    "mkdocs-jupyter",
+    "mkdocs-literate-nav",
+    "mkdocs-material",
+    "mkdocs-section-index",
+    "mkdocs-typer",
+    "mkdocstrings[python]",
+]
+lint = [
+    "pyright>=1.1.391",
+    "ruff>=0.8.4",
+]
+tests = [
+    "pytest",
+    "pytest-sugar",
+    "tox-uv",
+]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
+[tool.ruff]
+namespace-packages = ["scripts/docs"]
 
 [tool.ruff.lint]
 select = ["ALL"]
+extend-ignore = [
+    "ANN002",  # https://docs.astral.sh/ruff/rules/missing-type-args/
+    "ANN003",  # https://docs.astral.sh/ruff/rules/missing-type-kwargs/
+    "D103",  # https://docs.astral.sh/ruff/rules/undocumented-public-function/
+    "N812",  # https://docs.astral.sh/ruff/rules/lowercase-imported-as-non-lowercase/
+    "N813",  # https://docs.astral.sh/ruff/rules/camelcase-imported-as-lowercase/
+]
 
-[project.scripts]
-procex = "procex.__main__:app"
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

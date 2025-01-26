@@ -1,15 +1,20 @@
+"""Input/output utilities for image processing."""
+
 import enum
+from collections.abc import Callable
 from pathlib import Path
 
-import SimpleITK as sitk  # noqa: N813
+import SimpleITK as sitk
 
 from .functional import rgb2gray
 from .functional import squeeze as squeeze_image
-from .typing import TypePath
+from .type_definitions import TypePath
 
 
 @enum.unique
 class ItkImageIo(str, enum.Enum):
+    """Enumeration of ITK image IO classes."""
+
     JPEG = "JPEGImageIO"
     JPEG_2000 = "JPEG2000ImageIO"
     PNG = "PNGImageIO"
@@ -22,6 +27,16 @@ def read_image(
     squeeze: bool = True,
     grayscale: bool = True,
 ) -> sitk.Image:
+    """Read an image from a file.
+
+    Args:
+        path: The path to the image file.
+        squeeze: Whether to remove singleton dimensions from the image.
+        grayscale: Whether to convert the image to single-channel grayscale.
+
+    Returns:
+        The image read from the file
+    """
     image = sitk.ReadImage(str(path))
     if grayscale:
         image = rgb2gray(image)
@@ -53,15 +68,20 @@ def write_tiff(
     write_image(image, path)
 
 
-def check_uint8(func):
-    def wrapper(image, *args, **kwargs):
+def check_uint8(func: Callable) -> Callable:
+    def wrapper(
+        image: sitk.Image,
+        path: TypePath,
+        *args,
+        **kwargs,
+    ) -> None:
         if image.GetPixelID() != sitk.sitkUInt8:
             msg = (
-                'Expected image to have pixel type "8-bit unsigned integer",'
+                f'Expected image "{path}" to have pixel type "8-bit unsigned integer",'
                 f' but got "{image.GetPixelIDTypeAsString()}"'
             )
             raise ValueError(msg)
-        return func(image, *args, **kwargs)
+        return func(image, path, *args, **kwargs)
 
     return wrapper
 
@@ -88,10 +108,20 @@ def write_png(
     write_image(image, path)
 
 
-def _check_suffix(path: TypePath, suffixes: str | tuple[str]) -> None:
+def _check_suffix(path: TypePath, suffixes: str | tuple[str, ...]) -> None:
     if isinstance(suffixes, str):
         suffixes = (suffixes,)
     suffix = Path(path).suffix
     if suffix not in suffixes:
         msg = f'Expected path "{path}" to have a suffix in "{suffixes}"'
         raise ValueError(msg)
+
+
+def check_quality(value: int) -> int:
+    """Check that a value is a valid quality for JPEG compression."""
+    min_quality = 0
+    max_quality = 100
+    if not (min_quality <= value <= max_quality):
+        message = f"Quality must be an integer between 0 and 100 but got {value}."
+        raise ValueError(message)
+    return value
