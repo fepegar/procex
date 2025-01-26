@@ -1,10 +1,13 @@
 """Main entry point for the procex command-line interface."""
 
 from enum import Enum
+from functools import partial
 from pathlib import Path
 from typing import Annotated
 
 import typer
+from tqdm.auto import tqdm
+from tqdm.contrib.concurrent import process_map
 
 import procex.functional as F
 from procex.imgio import check_quality
@@ -102,37 +105,75 @@ def process_images(  # noqa: PLR0913
             help="Ignore all other options and process as in MIMIC-CXR-JPG.",
         ),
     ] = False,
+    parallel: Annotated[
+        bool,
+        typer.Option(
+            ...,
+            help="Whether to process images in parallel.",
+        ),
+    ] = False,
 ) -> None:
     """Preprocess a medical image."""
     input_paths = _get_input_paths(input)
     output_paths = _get_output_paths(output, input_paths)
 
-    for input_path, output_path in zip(input_paths, output_paths, strict=True):
-        image = read_image(input_path)
+    _process = partial(
+        _process_image,
+        size=size,
+        num_bits=num_bits,
+        jpeg_quality=jpeg_quality,
+        percentiles=percentiles,
+        values=values,
+        histeq=histeq,
+        mimic=mimic,
+    )
 
-        if mimic:
-            image = F.enhance_contrast(image, num_bits=8, histeq=True)
-            if output_path.suffix not in {".jpg", ".jpeg"}:
-                output_path = output_path.with_suffix(".jpg")  # noqa: PLW2901
-            write_jpeg(image, output_path, quality=95)
-            continue
+    if parallel:
+        process_map(_process, input_paths, output_paths)
+        return
 
-        if size is not None:
-            image = F.resize(image, size)
+    progress = tqdm(list(zip(input_paths, output_paths, strict=True)))
+    for input_path, output_path in progress:
+        _process(input_path, output_path)
 
-        image = F.enhance_contrast(
-            image,
-            num_bits=int(num_bits),
-            percentiles=percentiles,
-            values=values,
-            histeq=histeq,
-        )
 
-        match output_path.suffix:
-            case ".jpg" | ".jpeg":
-                write_jpeg(image, output_path, jpeg_quality)
-            case _:
-                write_image(image, output_path)
+def _process_image(  # noqa: PLR0913
+    input_path: Path,
+    output_path: Path,
+    size: int | None,
+    num_bits: NumBits,
+    jpeg_quality: int,
+    percentiles: tuple[float, float],
+    values: tuple[float, float] | None,
+    *,
+    histeq: bool,
+    mimic: bool,
+) -> None:
+    image = read_image(input_path)
+
+    if mimic:
+        image = F.enhance_contrast(image, num_bits=8, histeq=True)
+        if output_path.suffix not in {".jpg", ".jpeg"}:
+            output_path = output_path.with_suffix(".jpg")
+        write_jpeg(image, output_path, quality=95)
+        return
+
+    if size is not None:
+        image = F.resize(image, size)
+
+    image = F.enhance_contrast(
+        image,
+        num_bits=int(num_bits),
+        percentiles=percentiles,
+        values=values,
+        histeq=histeq,
+    )
+
+    match output_path.suffix:
+        case ".jpg" | ".jpeg":
+            write_jpeg(image, output_path, jpeg_quality)
+        case _:
+            write_image(image, output_path)
 
 
 def _get_input_paths(input_path: Path) -> list[Path]:

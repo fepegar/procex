@@ -12,6 +12,7 @@ dependencies = [
     "pillow>=8",
     "scikit-learn>=1",
     "simpleitk>=2",
+    "tqdm>=4",
     "typer>=0.2",
 ]
 
