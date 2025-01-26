@@ -81,9 +81,20 @@ def main(  # noqa: PLR0913
             ),
         ),
     ] = False,
+    mimic: Annotated[
+        bool,
+        typer.Option(
+            ...,
+            help="Ignore all other options and process as in MIMIC-CXR-JPG.",
+        ),
+    ] = False,
 ) -> None:
     """Resize an image."""
     image = read_image(input_path)
+
+    if mimic:
+        image = F.enhance_contrast(image, num_bits=8, histeq=True)
+        write_jpeg(image, output_path, quality=95)
 
     if size is not None:
         image = F.resize(image, size)
