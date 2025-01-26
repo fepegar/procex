@@ -112,10 +112,17 @@ def process_images(  # noqa: PLR0913
             help="Whether to process images in parallel.",
         ),
     ] = False,
+    format: Annotated[  # noqa: A002
+        str,
+        typer.Option(
+            ...,
+            help="Output image format. Only used when output is a directory.",
+        ),
+    ],
 ) -> None:
     """Preprocess a medical image."""
     input_paths = _get_input_paths(input)
-    output_paths = _get_output_paths(output, input_paths)
+    output_paths = _get_output_paths(output, input_paths, format=format)
 
     _process = partial(
         _process_image,
@@ -129,7 +136,7 @@ def process_images(  # noqa: PLR0913
     )
 
     if parallel:
-        process_map(_process, input_paths, output_paths)
+        process_map(_process, input_paths, output_paths, chunksize=1)
         return
 
     progress = tqdm(list(zip(input_paths, output_paths, strict=True)))
@@ -189,7 +196,11 @@ def _get_input_paths(input_path: Path) -> list[Path]:
     return paths
 
 
-def _get_output_paths(output_path: Path, input_paths: list[Path]) -> list[Path]:
+def _get_output_paths(
+    output_path: Path,
+    input_paths: list[Path],
+    format: str | None,  # noqa: A002
+) -> list[Path]:
     if output_path.suffix == ".txt":
         paths = [Path(p) for p in output_path.read_text().strip().splitlines()]
         if len(paths) != len(input_paths):
@@ -202,6 +213,8 @@ def _get_output_paths(output_path: Path, input_paths: list[Path]) -> list[Path]:
         paths = [output_path]
     elif output_path.is_dir():
         paths = [output_path / p.name for p in input_paths]
+        if format is not None:
+            paths = [p.with_suffix(f".{format.lstrip(".")}") for p in paths]
     else:
         message = f"Invalid output path: {output_path}"
         raise ValueError(message)
