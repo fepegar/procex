@@ -129,3 +129,4 @@ uv.lock
 *.j2k
 *.nii*
 *.nrrd
+*.txt

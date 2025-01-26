@@ -25,14 +25,28 @@ class NumBits(str, Enum):
 
 
 @_app.command()
-def main(  # noqa: PLR0913
-    input_path: Annotated[
+def process_images(  # noqa: PLR0913
+    input: Annotated[  # noqa: A002
         Path,
-        typer.Argument(),
+        typer.Argument(
+            ...,
+            help=(
+                "Path to the input image. If a text file is given, process the image"
+                " paths from the file. If a directory is given, process all files in"
+                " the directory."
+            ),
+        ),
     ],
-    output_path: Annotated[
+    output: Annotated[
         Path,
-        typer.Argument(),
+        typer.Argument(
+            ...,
+            help=(
+                "Path to the output image. If a text file is given, the output paths"
+                " must be specified in the file. If a directory is given, write the"
+                " output images to the directory."
+            ),
+        ),
     ],
     size: Annotated[
         int | None,
@@ -89,29 +103,68 @@ def main(  # noqa: PLR0913
         ),
     ] = False,
 ) -> None:
-    """Resize an image."""
-    image = read_image(input_path)
+    """Preprocess a medical image."""
+    input_paths = _get_input_paths(input)
+    output_paths = _get_output_paths(output, input_paths)
 
-    if mimic:
-        image = F.enhance_contrast(image, num_bits=8, histeq=True)
-        write_jpeg(image, output_path, quality=95)
+    for input_path, output_path in zip(input_paths, output_paths, strict=True):
+        image = read_image(input_path)
 
-    if size is not None:
-        image = F.resize(image, size)
+        if mimic:
+            image = F.enhance_contrast(image, num_bits=8, histeq=True)
+            if output_path.suffix not in {".jpg", ".jpeg"}:
+                output_path = output_path.with_suffix(".jpg")  # noqa: PLW2901
+            write_jpeg(image, output_path, quality=95)
+            continue
 
-    image = F.enhance_contrast(
-        image,
-        num_bits=int(num_bits),
-        percentiles=percentiles,
-        values=values,
-        histeq=histeq,
-    )
+        if size is not None:
+            image = F.resize(image, size)
 
-    match output_path.suffix:
-        case ".jpg" | ".jpeg":
-            write_jpeg(image, output_path, jpeg_quality)
-        case _:
-            write_image(image, output_path)
+        image = F.enhance_contrast(
+            image,
+            num_bits=int(num_bits),
+            percentiles=percentiles,
+            values=values,
+            histeq=histeq,
+        )
+
+        match output_path.suffix:
+            case ".jpg" | ".jpeg":
+                write_jpeg(image, output_path, jpeg_quality)
+            case _:
+                write_image(image, output_path)
+
+
+def _get_input_paths(input_path: Path) -> list[Path]:
+    if input_path.is_dir():
+        paths = sorted(input_path.iterdir())
+    elif input_path.suffix == ".txt":
+        paths = [Path(p) for p in input_path.read_text().strip().splitlines()]
+    elif input_path.is_file():
+        paths = [input_path]
+    else:
+        message = f"Invalid input path: {input_path}"
+        raise ValueError(message)
+    return paths
+
+
+def _get_output_paths(output_path: Path, input_paths: list[Path]) -> list[Path]:
+    if output_path.suffix == ".txt":
+        paths = [Path(p) for p in output_path.read_text().strip().splitlines()]
+        if len(paths) != len(input_paths):
+            message = (
+                f"Number of input images ({len(input_paths)}) does not match the number"
+                f" of output paths ({len(paths)})"
+            )
+            raise ValueError(message)
+    elif output_path.is_file():
+        paths = [output_path]
+    elif output_path.is_dir():
+        paths = [output_path / p.name for p in input_paths]
+    else:
+        message = f"Invalid output path: {output_path}"
+        raise ValueError(message)
+    return paths
 
 
 if __name__ == "__main__":
