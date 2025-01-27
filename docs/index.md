@@ -1,9 +1,5 @@
 # ProceX
 
-This is the documentation for ProceX.
-
-## Why ProceX?
-
 Medical image datasets such as X-ray scans are typically stored in DICOM files, using signed 16-bit integers to represent pixel values.
 There is not an obvious or standard method to convert these pixel values to a format that can be used by machine learning models.
 Typically, the DICOM files are converted to a different format, such as PNG or JPEG, and the pixel values are normalized to the range of the output format.
