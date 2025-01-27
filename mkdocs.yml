@@ -69,6 +69,7 @@ plugins:
 nav:
   - index.md
   - getting_started.md
+  - Tutorial: tutorial.ipynb
   - getting_help.md
   - API reference: reference/
 
