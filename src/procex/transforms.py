@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from PIL import Image
 
 
-class ToTensorEightOrSixteenBits:
+class ToTensor:
     """Convert an 8- or 16-bit Pillow image to a tensor and normalize to [0, 1]."""
     def __call__(self, image: Image.Image) -> torch.Tensor:
         """Convert, cast and normalize the image.
