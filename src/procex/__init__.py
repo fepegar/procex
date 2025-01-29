@@ -3,6 +3,10 @@
 import importlib.metadata
 
 from .main import process_images
+from .transforms import ToTensor
 
 __version__ = importlib.metadata.version(__name__)
-__all__ = ["process_images"]
+__all__ = [
+    "ToTensor",
+    "process_images",
+]
