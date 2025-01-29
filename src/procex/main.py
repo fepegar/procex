@@ -1,5 +1,6 @@
 """Main entry point for the procex command-line interface."""
 
+import os
 from enum import Enum
 from functools import partial
 from pathlib import Path
@@ -15,9 +16,14 @@ from procex.imgio import read_image
 from procex.imgio import write_image
 from procex.imgio import write_jpeg
 
+disable_rich = os.environ.get("PROCEX_DISABLE_RICH", "0") == "1"
+rich_kwargs = {}
+if disable_rich:
+    rich_kwargs["rich_markup_mode"] = None
 _app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
+    **rich_kwargs,
 )
 
 
