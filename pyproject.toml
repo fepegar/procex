@@ -18,6 +18,9 @@ dependencies = [
 plot = [
     "matplotlib>=3",
 ]
+torch = [
+    "torchvision>=0.10",
+]
 
 [project.scripts]
 procex = "procex.main:_app"
