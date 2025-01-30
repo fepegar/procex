@@ -146,9 +146,12 @@ def process_images(  # noqa: PLR0913
         process_map(_process, input_paths, output_paths, chunksize=1)
         return
 
-    progress = tqdm(list(zip(input_paths, output_paths, strict=True)))
-    for input_path, output_path in progress:
-        _process(input_path, output_path)
+    if len(input_paths) > 1:
+        progress = tqdm(list(zip(input_paths, output_paths, strict=True)))
+        for input_path, output_path in progress:
+            _process(input_path, output_path)
+    else:
+        _process(input_paths[0], output_paths[0])
 
 
 def _process_image(  # noqa: PLR0913
