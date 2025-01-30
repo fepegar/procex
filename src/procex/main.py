@@ -224,10 +224,9 @@ def _get_output_paths(
     elif output_path.is_dir():
         paths = [output_path / p.name for p in input_paths]
         if format is not None:
-            paths = [p.with_suffix(f".{format.lstrip(".")}") for p in paths]
+            paths = [p.with_suffix(f".{format.lstrip('.')}") for p in paths]
     else:
-        message = f"Invalid output path: {output_path}"
-        raise ValueError(message)
+        paths = [output_path]
     return paths
 
 
